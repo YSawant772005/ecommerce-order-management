@@ -1,0 +1,61 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ecommerce-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      PG_DSN: postgresql://ecommerce:ecommerce@postgres:5432/ecommerce
+      MONGO_DSN: mongodb://mongo:27017
+      MONGO_DB_NAME: ecommerce
+      ES_URL: http://elasticsearch:9200
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  celery-worker:
+    build: ./backend
+    container_name: ecommerce-celery-worker
+    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info
+    environment:
+      PG_DSN: postgresql://ecommerce:ecommerce@postgres:5432/ecommerce
+      MONGO_DSN: mongodb://mongo:27017
+      MONGO_DB_NAME: ecommerce
+      ES_URL: http://elasticsearch:9200
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - backend
+
+  celery-beat:
+    build: ./backend
+    container_name: ecommerce-celery-beat
+    command: celery -A app.workers.celery_app.celery_app beat --loglevel=info
+    environment:
+      PG_DSN: postgresql://ecommerce:ecommerce@postgres:5432/ecommerce
+      MONGO_DSN: mongodb://mongo:27017
+      MONGO_DB_NAME: ecommerce
+      ES_URL: http://elasticsearch:9200
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - backend
+
+  frontend:
+    build: ./frontend
+    container_name: ecommerce-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

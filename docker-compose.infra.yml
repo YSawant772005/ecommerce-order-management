@@ -1,0 +1,89 @@
+# Infra-only stack for running FastAPI / Celery / Vite on the host.
+#
+# Same four stores as docker-compose.yml, with two deliberate differences:
+#
+# 1. Postgres publishes on 55432 because a system PostgreSQL already owns 5432
+#    on this machine. That matches the PG_DSN in .env.example and the default
+#    in app/core/settings.py.
+#
+# 2. No fixed `container_name`. Stale containers named ecommerce-postgres /
+#    -mongo / -elasticsearch / -rabbitmq from a *different* checkout are still
+#    on this machine (they carry the ecommerce-order-management_* volume
+#    prefix). Omitting the name lets Docker derive a project-scoped name and
+#    leaves someone else's containers alone.
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml up -d
+#
+# Passing -f explicitly means docker-compose.override.yml is NOT auto-merged,
+# so the backend/celery/frontend containers defined there stay untouched and
+# FastAPI/Celery/Vite run on the host as the README's "Run (develop)" flow
+# describes.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+      POSTGRES_DB: ecommerce
+    ports:
+      - "55432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:
+  mongo-data:
+  es-data:
+  rabbitmq-data:

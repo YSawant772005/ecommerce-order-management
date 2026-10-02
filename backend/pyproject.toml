@@ -1,0 +1,21 @@
+[project]
+name = "ecommerce-order-management-backend"
+version = "1.0.0"
+description = "E-commerce order management and admin search POC (PostgreSQL + MongoDB + Elasticsearch)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# One event loop for the whole session. Every fixture here holds a real client
+# bound to a real socket (asyncpg pool, motor, AsyncElasticsearch, httpx ASGI),
+# and none of those survives being driven from a different loop than the one
+# that created it.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    # motor is deprecated in favour of the async pymongo client but remains the
+    # documented driver for this POC's MongoDB access path.
+    "ignore::DeprecationWarning:motor.*",
+]

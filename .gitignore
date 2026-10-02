@@ -1,0 +1,31 @@
+# Assignment source document (untracked by design)
+docs/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+celerybeat-schedule*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Superpowers SDD workspace (ledger, briefs, review packages)
+.superpowers/
