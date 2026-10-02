@@ -1,8 +1,4 @@
-Updated todo list
 
-Paste this into `README.md`:
-
-```markdown
 E-Commerce Order Management & Search Service
 
 A full-stack ecommerce application with:
