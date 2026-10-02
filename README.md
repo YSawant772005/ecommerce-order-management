@@ -15,7 +15,7 @@ A full-stack ecommerce application with:
 - RabbitMQ and Celery for asynchronous order synchronization
 - Nginx for serving the frontend and proxying API requests
 
-## Run With Docker
+Run With Docker
 
 Start Docker Desktop first.
 
