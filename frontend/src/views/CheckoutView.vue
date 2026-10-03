@@ -12,11 +12,13 @@
       <span class="muted">{{ cart.lines.length }} item(s)</span>
     </div>
     <table v-if="cart.lines.length" class="cart-table">
-      <tr><th>Product</th><th>Qty</th></tr>
-      <tr v-for="l in cart.lines" :key="l.product_id">
-        <td><span class="cart-emoji">{{ emojiFor(l) }}</span> {{ l.title || l.product_id }}</td>
-        <td><span class="qty-chip">{{ l.quantity }}</span></td>
-      </tr>
+      <tbody>
+        <tr><th>Product</th><th>Qty</th></tr>
+        <tr v-for="l in cart.lines" :key="l.product_id">
+          <td><span class="cart-emoji">{{ emojiFor(l) }}</span> {{ l.title || l.product_id }}</td>
+          <td><span class="qty-chip">{{ l.quantity }}</span></td>
+        </tr>
+      </tbody>
     </table>
     <div v-else-if="!placed" class="cart-empty">
       <span class="cart-empty-ico">🛒</span>
